@@ -3,13 +3,11 @@ import 'style.dart' as style;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/rendering.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 void main() {
-  runApp(MaterialApp(
-      theme: style.theme,
-      home: MyApp()
-     )
-  );
+  runApp(MaterialApp(theme: style.theme, home: MyApp()));
 }
 
 var a = TextStyle(color: Colors.red);
@@ -25,6 +23,7 @@ class _MyAppState extends State<MyApp> {
   var tab = 0; //현재 탭의 상태를 보관할거임.state임
   var data = []; //서버로부터 받아온 데이터를 state에 저장할거임. 변동이 많은 데이터일거같고 수정도 많을거같아서
   var bottom_visible = true;
+  var userImage;   //유저가 선택한 이미지경로를 저장해줄 state
 
   @override
   void initState() {
@@ -93,14 +92,22 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(title: Text('Instargram'), actions: [
           IconButton(
             icon: Icon(Icons.add_box_outlined),
-            onPressed: () {
-              //새로운 페이지 하나 만들기
-              //첫번째 인자에는 마테리얼앱이 들어있는 context를 넣어야함. 여기엔 족보상에 부모로 마테리얼앱 가지고 있으므로 쓸 수잇음
-              //return 에 넣은 위젯이 새 페이지로 생성됨. 즉 여기에 scaffold 등 넣어서 만들면됨. 코드 길어지면 커스텀 위젯으로 ㄲㄱ.
-              //인자인 c도 중간에 context하나 만들어주는 context임..
-              // (){return ~~ }  이런식으로 중괄호안에 return문 있는 함수는 중괄호와 return, 세미콜론을 생략하고 => 이거만 써줘도됨. 다트문법임.
+            onPressed: () async {
+              //갤러리에서 사진이미지 고를 수 있게 이동하는 작업
+              var picker = ImagePicker();
+              var image = await picker.pickImage(source: ImageSource.gallery);
+
+              if (image != null) {  //사용자가 아무사진도 안 골랐을때도 고려해야하기에
+                setState(() {
+                  userImage = File(image.path);
+                });
+              }
+
+
+
+              //새 창띄움
               Navigator.push(
-                  context, MaterialPageRoute(builder: (c) => Upload() ));
+                  context, MaterialPageRoute(builder: (c) => Upload( userImage: userImage) ));
             }, //onpressed
             iconSize: 30,
           )
@@ -215,24 +222,25 @@ class _HomeState extends State<Home> {
   }
 }
 
-
+//유저가 메인화면 상단바의 +버튼 눌러서 게시물 새로 작성할때 화면의 커스텀위젯
 class Upload extends StatelessWidget {
-  const Upload({Key? key}) : super(key: key);
+  const Upload({Key? key, this.userImage}) : super(key: key);
+  final userImage;
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Image.file(userImage),  //파일경로로 이미지 띄우는 법
           Text('이미지업로드화면'),
+          TextField(),
           IconButton(
-              onPressed: (){
+              onPressed: () {
                 //페이지 닫기
-                Navigator.pop(context);   //context에는 마테리얼앱이 포함된 context를 넣으면됨.
-
+                Navigator.pop(context); //context에는 마테리얼앱이 포함된 context를 넣으면됨.
               },
               icon: Icon(Icons.close)),
         ],
@@ -240,4 +248,3 @@ class Upload extends StatelessWidget {
     );
   }
 }
-
