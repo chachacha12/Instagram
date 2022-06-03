@@ -5,6 +5,8 @@ import 'dart:convert';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 void main() {
   runApp(MaterialApp(theme: style.theme, home: MyApp()));
@@ -25,11 +27,20 @@ class _MyAppState extends State<MyApp> {
   var bottom_visible = true;
   var userImage;   //유저가 선택한 이미지경로를 저장해줄 state
 
+  //sharedpreference에다가 데이터 저장. - 내 폰 로컬에다가 저장됨
+  saveData() async {
+    var storage = await SharedPreferences.getInstance();
+    storage.setString('name', 'john');   //저장됨
+    var result = storage.get('name');
+    print(result);
+  }
+
 
   @override
   void initState() {
     //MyApp위젯이 첫 로드될때 실행됨
     super.initState();
+    saveData();
     getData();
   }
 
