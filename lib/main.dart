@@ -25,11 +25,20 @@ class _MyAppState extends State<MyApp> {
   var bottom_visible = true;
   var userImage;   //유저가 선택한 이미지경로를 저장해줄 state
 
+
   @override
   void initState() {
     //MyApp위젯이 첫 로드될때 실행됨
     super.initState();
     getData();
+  }
+
+  //유저가 +버튼누른 새창에서 게시물 작성한거 data state에 추가해주기위함 - 자식인 Upload위젯으로 보낼거임
+  addContent(var map){
+    setState(() {
+      data.insert(0, map);
+    });
+    print(data);
   }
 
   //근데 http.get()이 함수도 시간이 좀 오래걸리는 함수임(전문용어로 Future). 그래서 async 쓰고 await를 써준거임.
@@ -95,19 +104,15 @@ class _MyAppState extends State<MyApp> {
             onPressed: () async {
               //갤러리에서 사진이미지 고를 수 있게 이동하는 작업
               var picker = ImagePicker();
-              var image = await picker.pickImage(source: ImageSource.gallery);
-
+              var image = await picker.pickImage(source: ImageSource.gallery, );
               if (image != null) {  //사용자가 아무사진도 안 골랐을때도 고려해야하기에
                 setState(() {
                   userImage = File(image.path);
                 });
               }
-
-
-
               //새 창띄움
               Navigator.push(
-                  context, MaterialPageRoute(builder: (c) => Upload( userImage: userImage) ));
+                  context, MaterialPageRoute(builder: (c) => Upload( userImage: userImage, addContent: addContent, ) ));
             }, //onpressed
             iconSize: 30,
           )
@@ -193,6 +198,7 @@ class _HomeState extends State<Home> {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
     //데이터가 서버로부터 도착하고나면 위젯 보여주세요~.  이거 조건문으로 확인안하면 서버로부터 값 가져오기전에 이게 동작해서 에러문구 뜸.
@@ -206,7 +212,12 @@ class _HomeState extends State<Home> {
           return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.network(widget.serverdata[i]['image']),
+                //삼항연산자임
+                widget.serverdata[i]['image'].runtimeType == String
+                    ? Image.network( widget.serverdata[i]['image'])
+                    : Image.file( widget.serverdata[i]['image']),
+
+                //Image.network(widget.serverdata[i]['image']),
                 Text('좋아요: ${widget.serverdata[i]['likes']}',
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 Text('글쓴이: ' + widget.serverdata[i]['user']),
@@ -224,27 +235,50 @@ class _HomeState extends State<Home> {
 
 //유저가 메인화면 상단바의 +버튼 눌러서 게시물 새로 작성할때 화면의 커스텀위젯
 class Upload extends StatelessWidget {
-  const Upload({Key? key, this.userImage}) : super(key: key);
+  const Upload({Key? key, this.userImage, this.addContent, }) : super(key: key);
   final userImage;
+  final addContent;
 
   @override
   Widget build(BuildContext context) {
+    var inputdata = TextEditingController();  //유저가 작성한 글 저장할 변수
+
     return Scaffold(
       appBar: AppBar(),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Image.file(userImage),  //파일경로로 이미지 띄우는 법
-          Text('이미지업로드화면'),
-          TextField(),
-          IconButton(
-              onPressed: () {
-                //페이지 닫기
-                Navigator.pop(context); //context에는 마테리얼앱이 포함된 context를 넣으면됨.
-              },
-              icon: Icon(Icons.close)),
-        ],
-      ),
+      body:
+      SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.file(userImage),  //파일경로로 이미지 띄우는 법
+            Text('이미지업로드화면'),
+            TextField(controller: inputdata,),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(       //창닫기 버튼
+                  onPressed: () {
+                    //페이지 닫기
+                    Navigator.pop(context); //context에는 마테리얼앱이 포함된 context를 넣으면됨.
+                  },
+                  icon: Icon(Icons.close)),
+              ElevatedButton(    //업로드 버튼
+                  onPressed: (){
+                      var map =  {};
+                      map['image'] = userImage;
+                      map['content'] = inputdata.text.toString();
+                      map['likes'] = 5;
+                      map['liked'] = false;
+                      map['date'] = "Aug 25";
+                      map['user'] = "글쓴이";
+                      //  _map 위젯 안의 data state에 새로운 게시물 map을 추가해주는 함수
+                      addContent(map);
+                      Navigator.pop(context); //context에는 마테리얼앱이 포함된 context를 넣으면됨.
+                  },
+                  child: Text('업로드'))
+            ],)
+          ],
+        ),
+      )
     );
   }
 }
