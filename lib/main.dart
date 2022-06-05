@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/cupertino.dart';
 
 
 void main() {
@@ -209,7 +210,6 @@ class _HomeState extends State<Home> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     //데이터가 서버로부터 도착하고나면 위젯 보여주세요~.  이거 조건문으로 확인안하면 서버로부터 값 가져오기전에 이게 동작해서 에러문구 뜸.
@@ -228,10 +228,22 @@ class _HomeState extends State<Home> {
                     ? Image.network( widget.serverdata[i]['image'])
                     : Image.file( widget.serverdata[i]['image']),
 
-                //Image.network(widget.serverdata[i]['image']),
+                // GestureDetector 이 위젯으로 감싸면 Text()나 Image 등의 위젯들도 터치했을때 효과를 넣어줄 수 있음
+                GestureDetector(
+                  child: Text('글쓴이: ' + widget.serverdata[i]['user']),
+                  onTap: (){
+                      Navigator.push(context,
+                        PageRouteBuilder(
+                            pageBuilder: (c, a1, a2) => Profile(),
+                            transitionsBuilder: (c,a1,a2, child) =>      //child는 그냥 새로 띄울 페이지임. 즉 위의 Profile() 커스텀위젯인거임
+                                 FadeTransition(opacity: a1, child: child,)
+                        )
+                      );
+                  },
+
+                ),         //이 유저이름 누르면 해당유저의 프로필페이지 띄울거임
                 Text('좋아요: ${widget.serverdata[i]['likes']}',
                     style: TextStyle(fontWeight: FontWeight.bold)),
-                Text('글쓴이: ' + widget.serverdata[i]['user']),
                 Text('글내용: ' + widget.serverdata[i]['content']),
                 Text('작성일: ' + widget.serverdata[i]['date'])
               ]);
@@ -293,3 +305,41 @@ class Upload extends StatelessWidget {
     );
   }
 }
+
+
+class Profile extends StatelessWidget {
+  const Profile({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Text('프로필페이지'),
+
+    );
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
