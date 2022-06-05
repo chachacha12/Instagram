@@ -7,10 +7,15 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/cupertino.dart';
-
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(MaterialApp(theme: style.theme, home: MyApp()));
+  runApp(ChangeNotifierProvider(
+    //ChangeNotifierProvider로 마테리얼앱을 감싸서 이제 모든 위젯에서 Store1에 있는 state들을 가져다 쓸 수 있을거임
+    create: (c) => Store1(),
+    //c는 context임.  Store1은 내가 밑에 만들어둔 state보관함 클래스.
+    child: MaterialApp(theme: style.theme, home: MyApp()),
+  ));
 }
 
 var a = TextStyle(color: Colors.red);
@@ -26,16 +31,15 @@ class _MyAppState extends State<MyApp> {
   var tab = 0; //현재 탭의 상태를 보관할거임.state임
   var data = []; //서버로부터 받아온 데이터를 state에 저장할거임. 변동이 많은 데이터일거같고 수정도 많을거같아서
   var bottom_visible = true;
-  var userImage;   //유저가 선택한 이미지경로를 저장해줄 state
+  var userImage; //유저가 선택한 이미지경로를 저장해줄 state
 
   //sharedpreference에다가 데이터 저장. - 내 폰 로컬에다가 저장됨
   saveData() async {
     var storage = await SharedPreferences.getInstance();
-    storage.setString('name', 'john');   //저장됨
+    storage.setString('name', 'john'); //저장됨
     var result = storage.get('name');
     print(result);
   }
-
 
   @override
   void initState() {
@@ -46,7 +50,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   //유저가 +버튼누른 새창에서 게시물 작성한거 data state에 추가해주기위함 - 자식인 Upload위젯으로 보낼거임
-  addContent(var map){
+  addContent(var map) {
     setState(() {
       data.insert(0, map);
     });
@@ -116,15 +120,23 @@ class _MyAppState extends State<MyApp> {
             onPressed: () async {
               //갤러리에서 사진이미지 고를 수 있게 이동하는 작업
               var picker = ImagePicker();
-              var image = await picker.pickImage(source: ImageSource.gallery, );
-              if (image != null) {  //사용자가 아무사진도 안 골랐을때도 고려해야하기에
+              var image = await picker.pickImage(
+                source: ImageSource.gallery,
+              );
+              if (image != null) {
+                //사용자가 아무사진도 안 골랐을때도 고려해야하기에
                 setState(() {
                   userImage = File(image.path);
                 });
               }
               //새 창띄움
               Navigator.push(
-                  context, MaterialPageRoute(builder: (c) => Upload( userImage: userImage, addContent: addContent, ) ));
+                  context,
+                  MaterialPageRoute(
+                      builder: (c) => Upload(
+                            userImage: userImage,
+                            addContent: addContent,
+                          )));
             }, //onpressed
             iconSize: 30,
           )
@@ -225,23 +237,26 @@ class _HomeState extends State<Home> {
               children: [
                 //삼항연산자임
                 widget.serverdata[i]['image'].runtimeType == String
-                    ? Image.network( widget.serverdata[i]['image'])
-                    : Image.file( widget.serverdata[i]['image']),
+                    ? Image.network(widget.serverdata[i]['image'])
+                    : Image.file(widget.serverdata[i]['image']),
 
                 // GestureDetector 이 위젯으로 감싸면 Text()나 Image 등의 위젯들도 터치했을때 효과를 넣어줄 수 있음
                 GestureDetector(
                   child: Text('글쓴이: ' + widget.serverdata[i]['user']),
-                  onTap: (){
-                      Navigator.push(context,
+                  onTap: () {
+                    Navigator.push(
+                        context,
                         PageRouteBuilder(
                             pageBuilder: (c, a1, a2) => Profile(),
-                            transitionsBuilder: (c,a1,a2, child) =>      //child는 그냥 새로 띄울 페이지임. 즉 위의 Profile() 커스텀위젯인거임
-                                 FadeTransition(opacity: a1, child: child,)
-                        )
-                      );
+                            transitionsBuilder: (c, a1, a2,
+                                    child) => //child는 그냥 새로 띄울 페이지임. 즉 위의 Profile() 커스텀위젯인거임
+                                FadeTransition(
+                                  opacity: a1,
+                                  child: child,
+                                )));
                   },
-
-                ),         //이 유저이름 누르면 해당유저의 프로필페이지 띄울거임
+                ),
+                //이 유저이름 누르면 해당유저의 프로필페이지 띄울거임
                 Text('좋아요: ${widget.serverdata[i]['likes']}',
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 Text('글내용: ' + widget.serverdata[i]['content']),
@@ -258,88 +273,114 @@ class _HomeState extends State<Home> {
 
 //유저가 메인화면 상단바의 +버튼 눌러서 게시물 새로 작성할때 화면의 커스텀위젯
 class Upload extends StatelessWidget {
-  const Upload({Key? key, this.userImage, this.addContent, }) : super(key: key);
+  const Upload({
+    Key? key,
+    this.userImage,
+    this.addContent,
+  }) : super(key: key);
   final userImage;
   final addContent;
 
   @override
   Widget build(BuildContext context) {
-    var inputdata = TextEditingController();  //유저가 작성한 글 저장할 변수
+    var inputdata = TextEditingController(); //유저가 작성한 글 저장할 변수
 
     return Scaffold(
-      appBar: AppBar(),
-      body:
-      SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Image.file(userImage),  //파일경로로 이미지 띄우는 법
-            Text('이미지업로드화면'),
-            TextField(controller: inputdata,),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceAround,
+        appBar: AppBar(),
+        body: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IconButton(       //창닫기 버튼
-                  onPressed: () {
-                    //페이지 닫기
-                    Navigator.pop(context); //context에는 마테리얼앱이 포함된 context를 넣으면됨.
-                  },
-                  icon: Icon(Icons.close)),
-              ElevatedButton(    //업로드 버튼
-                  onPressed: (){
-                      var map =  {};
-                      map['image'] = userImage;
-                      map['content'] = inputdata.text.toString();
-                      map['likes'] = 5;
-                      map['liked'] = false;
-                      map['date'] = "Aug 25";
-                      map['user'] = "글쓴이";
-                      //  _map 위젯 안의 data state에 새로운 게시물 map을 추가해주는 함수
-                      addContent(map);
-                      Navigator.pop(context); //context에는 마테리얼앱이 포함된 context를 넣으면됨.
-                  },
-                  child: Text('업로드'))
-            ],)
-          ],
-        ),
-      )
-    );
+              Image.file(userImage), //파일경로로 이미지 띄우는 법
+              Text('이미지업로드화면'),
+              TextField(
+                controller: inputdata,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  IconButton(
+                      //창닫기 버튼
+                      onPressed: () {
+                        //페이지 닫기
+                        Navigator.pop(
+                            context); //context에는 마테리얼앱이 포함된 context를 넣으면됨.
+                      },
+                      icon: Icon(Icons.close)),
+                  ElevatedButton(
+                      //업로드 버튼
+                      onPressed: () {
+                        var map = {};
+                        map['image'] = userImage;
+                        map['content'] = inputdata.text.toString();
+                        map['likes'] = 5;
+                        map['liked'] = false;
+                        map['date'] = "Aug 25";
+                        map['user'] = "글쓴이";
+                        //  _map 위젯 안의 data state에 새로운 게시물 map을 추가해주는 함수
+                        addContent(map);
+                        Navigator.pop(
+                            context); //context에는 마테리얼앱이 포함된 context를 넣으면됨.
+                      },
+                      child: Text('업로드'))
+                ],
+              )
+            ],
+          ),
+        ));
   }
 }
 
+//Provider패키지를 이용하여 만든 state보관함임.  이런 보관함을 store라고 많이 작명함.
+class Store1 extends ChangeNotifier {
+  var name = 'john kim'; //프로필페이지에서 보여줄 이름
+  var follower = 0; //팔로워 숫자 보여줌
+  //팔로우 버튼 눌렀는지 확인. 일종의 스위치역할을 하는 state임.. 나중에 서버에 get요청 같은거 할때도 요청중인지 아닌지를 이렇게 스위치로 확인하기도함. 알아두기.
+  var follower_click = false;
 
+  //state변경함수
+  changeName() {
+    name = 'john park';
+    notifyListeners(); //state를 재랜더링 해주는 녀석.
+  }
+
+  follow() {
+    if (follower_click) {
+      //이미 팔로우 했던상태라면
+      follower--;
+      follower_click = false;
+    } else {
+      //팔로우 안된상태라면
+      follower++;
+      follower_click = true;
+    }
+    notifyListeners();
+  }
+}
+
+//프로필페이지 화면
 class Profile extends StatelessWidget {
   const Profile({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: Text('프로필페이지'),
-
+      appBar: AppBar(
+        title: Text(context.watch<Store1>().name),
+      ),
+      body: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+        CircleAvatar(
+          radius: 30,
+          backgroundColor: Colors.grey,
+        ),
+        Text('팔로워 ${context.watch<Store1>().follower}명'),
+        ElevatedButton(
+            //팔로우 버튼
+            onPressed: () {
+              context.read<Store1>().follow();
+            },
+            child: Text('팔로우'))
+      ]),
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
