@@ -10,12 +10,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  runApp(ChangeNotifierProvider(
-    //ChangeNotifierProvider로 마테리얼앱을 감싸서 이제 모든 위젯에서 Store1에 있는 state들을 가져다 쓸 수 있을거임
-    create: (c) => Store1(),
-    //c는 context임.  Store1은 내가 밑에 만들어둔 state보관함 클래스.
-    child: MaterialApp(theme: style.theme, home: MyApp()),
-  ));
+  runApp(
+      MultiProvider( //Store(state 보관소)가 여러개라면 이걸 이용해서 여러개 등록가능
+        //ChangeNotifierProvider로 마테리얼앱을 감싸서 이제 모든 위젯에서 Store1에 있는 state들을 가져다 쓸 수 있을거임
+        providers: [
+          ChangeNotifierProvider(create: (c) => Store1()),
+          ChangeNotifierProvider(create: (c) => Store2()),
+        ],
+        //c는 context임.  Store1은 내가 밑에 만들어둔 state보관함 클래스.
+        child: MaterialApp(theme: style.theme, home: MyApp()),
+      ));
 }
 
 var a = TextStyle(color: Colors.red);
@@ -70,7 +74,7 @@ class _MyAppState extends State<MyApp> {
       //실패시
     }
     var result2 =
-        jsonDecode(result.body); //jsonDecode이건 json을 리스트나 맵 등으로 변환해주는 함수임.
+    jsonDecode(result.body); //jsonDecode이건 json을 리스트나 맵 등으로 변환해주는 함수임.
     setState(() {
       data = result2;
     });
@@ -90,7 +94,7 @@ class _MyAppState extends State<MyApp> {
     }
     //게시물 한개 더 가져오기로 가져온 이 result2값은 map 타입임
     var result2 =
-        jsonDecode(result.body); //jsonDecode이건 json을 리스트나 맵 등으로 변환해주는 함수임.
+    jsonDecode(result.body); //jsonDecode이건 json을 리스트나 맵 등으로 변환해주는 함수임.
     setState(() {
       data.add(result2);
     });
@@ -133,7 +137,8 @@ class _MyAppState extends State<MyApp> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (c) => Upload(
+                      builder: (c) =>
+                          Upload(
                             userImage: userImage,
                             addContent: addContent,
                           )));
@@ -174,12 +179,11 @@ class _MyAppState extends State<MyApp> {
 
 //홈탭에서 보여주는 ui
 class Home extends StatefulWidget {
-  Home(
-      {Key? key,
-      this.serverdata,
-      this.get_more,
-      this.downscrolling,
-      this.No_downscrolling})
+  Home({Key? key,
+    this.serverdata,
+    this.get_more,
+    this.downscrolling,
+    this.No_downscrolling})
       : super(key: key);
   final serverdata;
   final get_more; //스크롤 맨밑일때 게시물 1개 더 가져오기 위한 함수
@@ -193,7 +197,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   //스크롪 높이 저장해두는 state만들어줌
   var scroll =
-      ScrollController(); //ScrollController 이건 위젯같은건 아니고 걍 스크롤정보를 쉽게 저장할 수 있게 해주는 저장함을 만들어주는 함수. 잘 몰라도됨.
+  ScrollController(); //ScrollController 이건 위젯같은건 아니고 걍 스크롤정보를 쉽게 저장할 수 있게 해주는 저장함을 만들어주는 함수. 잘 몰라도됨.
 
   //스크롤 변할때마다 체크해주기 위해 오버라이드함
   @override
@@ -249,11 +253,11 @@ class _HomeState extends State<Home> {
                         PageRouteBuilder(
                             pageBuilder: (c, a1, a2) => Profile(),
                             transitionsBuilder: (c, a1, a2,
-                                    child) => //child는 그냥 새로 띄울 페이지임. 즉 위의 Profile() 커스텀위젯인거임
-                                FadeTransition(
-                                  opacity: a1,
-                                  child: child,
-                                )));
+                                child) => //child는 그냥 새로 띄울 페이지임. 즉 위의 Profile() 커스텀위젯인거임
+                            FadeTransition(
+                              opacity: a1,
+                              child: child,
+                            )));
                   },
                 ),
                 //이 유저이름 누르면 해당유저의 프로필페이지 띄울거임
@@ -300,7 +304,7 @@ class Upload extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   IconButton(
-                      //창닫기 버튼
+                    //창닫기 버튼
                       onPressed: () {
                         //페이지 닫기
                         Navigator.pop(
@@ -308,7 +312,7 @@ class Upload extends StatelessWidget {
                       },
                       icon: Icon(Icons.close)),
                   ElevatedButton(
-                      //업로드 버튼
+                    //업로드 버튼
                       onPressed: () {
                         var map = {};
                         map['image'] = userImage;
@@ -331,19 +335,30 @@ class Upload extends StatelessWidget {
   }
 }
 
+
+class Store2 extends ChangeNotifier {
+  var name = 'john kim'; //프로필페이지에서 보여줄 이름
+}
+
+
 //Provider패키지를 이용하여 만든 state보관함임.  이런 보관함을 store라고 많이 작명함.
 class Store1 extends ChangeNotifier {
-  var name = 'john kim'; //프로필페이지에서 보여줄 이름
   var follower = 0; //팔로워 숫자 보여줌
   //팔로우 버튼 눌렀는지 확인. 일종의 스위치역할을 하는 state임.. 나중에 서버에 get요청 같은거 할때도 요청중인지 아닌지를 이렇게 스위치로 확인하기도함. 알아두기.
   var follower_click = false;
+  var profileImage = []; //프로필페이지 방문시 get요청하는데 그 값들 여기에 저장
 
-  //state변경함수
-  changeName() {
-    name = 'john park';
-    notifyListeners(); //state를 재랜더링 해주는 녀석.
+  //get요청해서 프로필이미지들 가져와서 profileImage 스테이트에 저장해주는(변경해주는) 함수   - 그냥 서버에 get요청 필요시 Store에서 하면 됨.
+  getData() async {
+    var result = await http.get(
+        Uri.parse('https://codingapple1.github.io/app/profile.json'));
+    var result2 = jsonDecode(result.body);
+    profileImage = result2;
+    notifyListeners();
+    print(profileImage);
   }
 
+  //state변경함수
   follow() {
     if (follower_click) {
       //이미 팔로우 했던상태라면
@@ -366,21 +381,41 @@ class Profile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.watch<Store1>().name),
+        title: Text(context
+            .watch<Store2>()
+            .name),
       ),
-      body: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-        CircleAvatar(
-          radius: 30,
-          backgroundColor: Colors.grey,
-        ),
-        Text('팔로워 ${context.watch<Store1>().follower}명'),
-        ElevatedButton(
-            //팔로우 버튼
-            onPressed: () {
-              context.read<Store1>().follow();
-            },
-            child: Text('팔로우'))
-      ]),
+      body: ProfileHeader() ,
     );
+  }
+}
+
+//프로필 커스텀위젯의 body부분에 들어가는 레이아웃을 코드 길어서 커스텀위젯으로 만들어둠
+class ProfileHeader extends StatelessWidget {
+  const ProfileHeader({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+      CircleAvatar(
+        radius: 30,
+        backgroundColor: Colors.grey,
+      ),
+      Text('팔로워 ${context
+          .watch<Store1>()
+          .follower}명'),
+      ElevatedButton(
+        //팔로우 버튼
+          onPressed: () {
+            context.read<Store1>().follow();
+          },
+          child: Text('팔로우')),
+      ElevatedButton(
+        //팔로우 버튼
+          onPressed: () {
+            context.read<Store1>().getData();
+          },
+          child: Text('사진 가져오기'))
+    ]);
   }
 }
