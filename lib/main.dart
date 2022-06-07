@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instargram/notification.dart';
 import 'style.dart' as style;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -8,6 +9,7 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import 'notification.dart';
 
 void main() {
   runApp(
@@ -49,6 +51,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     //MyApp위젯이 첫 로드될때 실행됨
     super.initState();
+    initNotification();
     saveData();
     getData();
   }
@@ -118,6 +121,10 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        floatingActionButton: FloatingActionButton(child: Text('+'), onPressed: (){
+          print('플로팅버튼 누름. showNotifi 함수 실행');
+          showNotification();
+        },),
         appBar: AppBar(title: Text('Instargram'), actions: [
           IconButton(
             icon: Icon(Icons.add_box_outlined),
@@ -385,7 +392,19 @@ class Profile extends StatelessWidget {
             .watch<Store2>()
             .name),
       ),
-      body: ProfileHeader() ,
+      //상단엔 특정유저 팔로우버튼있고 하단엔 그 유저가 올린 사진들 보여줄거임
+      body: CustomScrollView(            //이 위젯쓰면 slivers 안에다가 넣는 위젯들 다 합쳐서 스크롤바 만들어줌.
+        slivers: [
+          SliverToBoxAdapter(child: ProfileHeader()),  //일반 박스..
+          SliverGrid(      //격자모양의 그리드뷰
+             delegate: SliverChildBuilderDelegate(
+                 (c, i) =>  Container( child: Image.network( context.watch<Store1>().profileImage[i]) ),  //이 위젯을 격자로 만들어줌
+               childCount: context.watch<Store1>().profileImage.length,   //Store에서 이미지 저장된 state를 가져옴
+             ),
+             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount( crossAxisCount: 2 )
+          )
+        ],
+      )
     );
   }
 }
@@ -411,9 +430,10 @@ class ProfileHeader extends StatelessWidget {
           },
           child: Text('팔로우')),
       ElevatedButton(
-        //팔로우 버튼
+        //사진 가져오기 버튼
           onPressed: () {
-            context.read<Store1>().getData();
+            context.read<Store1>().getData();  //서버로부터 이미지들 가져와서 state에 저장. 그럼 알아서 state변한거 감지해서 위젯만들거임
+
           },
           child: Text('사진 가져오기'))
     ]);
