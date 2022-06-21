@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "702542164489",
+    "project_id": "fluttergram-6cf44",
+    "storage_bucket": "fluttergram-6cf44.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:702542164489:android:c51562d74046c8c777fed8",
+        "android_client_info": {
+          "package_name": "com.minwoo.instargram"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "702542164489-9nqiu5qshh3dl2dsbhuqlikiimfffg36.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2hqikR2Gsvua3KJo-unhtkcB_-JRuRMQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "702542164489-9nqiu5qshh3dl2dsbhuqlikiimfffg36.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "702542164489-jg6s8bn6khkmduuk4maklphh1cs9hk35.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.minwoo.instargram"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

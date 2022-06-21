@@ -10,8 +10,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'notification.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+
+
+
+void main() async {
+  //파이어베이스 쓰기위한 코드4줄을 추가한거임. 위의 async도 포함.
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(
       MultiProvider( //Store(state 보관소)가 여러개라면 이걸 이용해서 여러개 등록가능
         //ChangeNotifierProvider로 마테리얼앱을 감싸서 이제 모든 위젯에서 Store1에 있는 state들을 가져다 쓸 수 있을거임
@@ -51,7 +62,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     //MyApp위젯이 첫 로드될때 실행됨
     super.initState();
-    initNotification();
+    initNotification(context);
     saveData();
     getData();
   }
@@ -123,7 +134,7 @@ class _MyAppState extends State<MyApp> {
     return Scaffold(
         floatingActionButton: FloatingActionButton(child: Text('+'), onPressed: (){
           print('플로팅버튼 누름. showNotifi 함수 실행');
-          showNotification();
+          showNotification2();
         },),
         appBar: AppBar(title: Text('Instargram'), actions: [
           IconButton(

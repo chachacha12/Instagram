@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 final notifications = FlutterLocalNotificationsPlugin();
 
 
 //1. 앱로드시 실행할 기본설정
-initNotification() async {
+initNotification(context) async {
 
   //안드로이드용 아이콘파일 이름
   var androidSetting = AndroidInitializationSettings('logo');
@@ -23,8 +25,16 @@ initNotification() async {
   );
   await notifications.initialize(
     initializationSettings,
-    //알림 누를때 함수실행하고 싶으면
-    //onSelectNotification: 함수명추가
+
+      //알림 눌리면 여기 함수에 작성한 내용이 실행됨 - 주로 페이지 띄우기
+      onSelectNotification: (payload){
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => Text('새로운페이지'),
+            ),
+        );
+      }
   );
 }
 
@@ -56,11 +66,52 @@ showNotification() async {
       '내용1',
       NotificationDetails(android: androidDetails, iOS: iosDetails)
   );
-
-  print('show함수 실행끝');
 }
 
+//이거 실행하면 알림뜹니다. 근데 원하는 시간, 주기적으로 알림 줄 수 있는 함수임.
+showNotification2() async {
 
+  tz.initializeTimeZones();  //이걸 추가해야 시간관련 함수들을 갖다쓸수있음
+
+  //여기는 위의 함수와 같음
+  var androidDetails = const AndroidNotificationDetails(
+    '유니크한 알림 ID',
+    '알림종류 설명',
+    priority: Priority.high,
+    importance: Importance.max,
+    color: Color.fromARGB(255, 255, 0, 0),
+  );
+  var iosDetails = const IOSNotificationDetails(
+    presentAlert: true,
+    presentBadge: true,
+    presentSound: true,
+  );
+
+  //기존의 notifications.show()함수와 다르게 시간을 인자로 줘서 알림을 원하는 시간에 알림띄우기 가능
+  notifications.zonedSchedule(
+      2,
+      '제목2',
+      '내용2',
+      makeDate(8, 30, 0),
+      //tz.TZDateTime.now(tz.local).add(Duration(seconds: 3 )),  //tz.TZDateTime.now(tz.local) 여기까지는 폰의 현재 시간을 출력함.
+      NotificationDetails(android: androidDetails, iOS: iosDetails),
+      androidAllowWhileIdle: true,
+      uiLocalNotificationDateInterpretation:
+      UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time  //이 스케줄함수 실행한 시간으로부터 몇시간, 며칠 후(인자선태)에 항상 같은 시간대에 알림 띄워줌
+  );
+}
+
+//매일 7시에 알림주기 등.. 특정시간대에 주기적으로 알림주는데에 필요한 함수
+makeDate(hour, min, sec){
+  var now = tz.TZDateTime.now(tz.local);
+  var when = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, min, sec);
+  if (when.isBefore(now)) {
+    return when.add(Duration(days: 1));
+  } else {
+    return when;
+  }
+}
 
 
 
