@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:instargram/notification.dart';
+import 'package:instargram/shop.dart';
 import 'style.dart' as style;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -131,6 +132,11 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+
+    print( MediaQuery.of(context).textScaleFactor);
+    //LP단위로 나옴.   1cm ==약 38LP임.
+
+
     return Scaffold(
         floatingActionButton: FloatingActionButton(child: Text('+'), onPressed: (){
           print('플로팅버튼 누름. showNotifi 함수 실행');
@@ -164,14 +170,15 @@ class _MyAppState extends State<MyApp> {
             iconSize: 30,
           )
         ]),
+
+        //맵구조로 만들어서 tab의 값이 변함에 따라 Home위젯을 보여주거나 Shop위젯을 보여주거나함. Shop위젯은 따로 파일 만드러서 관리
         body: [
           Home(
               serverdata: data,
               get_more: get_more,
               downscrolling: downscrolling,
               No_downscrolling: No_downscrolling),
-          Text('샵페이지')
-        ][tab],
+          Shop()][tab],
         //list에서 특정순서 자료 뽑는 문법임
         bottomNavigationBar: Visibility(
           visible: bottom_visible,
